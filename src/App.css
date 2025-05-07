@@ -7,3 +7,9 @@
 #entryGrid {
   height: 100%;
 }
+
+.panel-content {
+  height: 100%;
+  width: 100%;
+  padding: 20px;
+}
