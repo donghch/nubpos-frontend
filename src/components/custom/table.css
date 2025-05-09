@@ -1,6 +1,19 @@
 
 table {
     width: 100%;
-    height: 100%;
     margin-top: 10px;
+}
+
+thead > th {
+    background-color: black;
+    color: white;
+    height: 50px;
+    font-size: 120%;
+}
+
+tbody > tr {
+    text-align: center;
+    font-size: 120%;
+    height: min(5vh, 50px);
+    border-bottom: 1px solid black;
 }
