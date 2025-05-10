@@ -7,7 +7,7 @@ function Table({ header, data }) {
     let renderedHeaders = [];
     for (const key in header) {
         renderedHeaders.push(
-            <th scope={"col"} >{ header[key] }</th>
+            <th key={key} scope={"col"} >{ header[key] }</th>
         );
     }
 
@@ -16,11 +16,11 @@ function Table({ header, data }) {
             let result = [];
 
             for (const key in header) {
-                result.push(<td>{ item[key] }</td>)
+                result.push(<td key={key}>{ item[key] }</td>)
             }
 
             return (
-                <tr>
+                <tr key={item.id}>
                     { result }
                 </tr>
             );
@@ -30,7 +30,9 @@ function Table({ header, data }) {
     return (
         <table>
             <thead>
-                { renderedHeaders }
+                <tr>
+                    { renderedHeaders }
+                </tr>
             </thead>
             <tbody>
                 {renderedItems}
