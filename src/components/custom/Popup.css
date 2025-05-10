@@ -1,0 +1,21 @@
+
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.popup {
+    position: fixed;
+    left: 25%;
+    right: 25%;
+    width: 50%;
+    top: 25%;
+    height: 50%;
+    background-color: white;
+    border-radius: 10px;
+    padding: 10px;
+}

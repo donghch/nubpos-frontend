@@ -1,7 +1,13 @@
 
-function Popup({shown, children}) {
+import "./Popup.css";
+
+function Popup({show, children}) {
     return (
-        <p>This is a pop up</p>
+        <div className="popup-overlay" style={{display: show ? "block" : "none"}}>
+            <div className="popup">
+                { children }
+            </div>
+        </div>
     );
 }
 
