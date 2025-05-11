@@ -18,7 +18,7 @@ function SearchPopup() {
 
     return (
         <div className="search-popup">
-            <Input height="50px" style={{fontsize: "30px"}}/>
+            <Input height="50px" style={{fontSize: "30px"}}/>
             <Keyboard layout={keyboardLayout} />
         </div>
     );
