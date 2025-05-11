@@ -1,0 +1,17 @@
+
+.search-popup {
+    display: none;
+    position: fixed;
+    top: 10vh;
+    left: 10vw;
+    right: 10vw;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    background-color: white;
+    height: min(80vw, 80vh);
+}
+
+.search-popup > input {
+    margin-bottom: 15px;
+}
