@@ -2,13 +2,19 @@
 import "./Popup.css";
 
 function Popup({show, children}) {
-    return (
-        <div className="popup-overlay" style={{display: show ? "block" : "none"}}>
-            <div className="popup">
-                { children }
+
+    if (show === true)
+        return (
+            <div className="popup-overlay">
+                <div className="popup">
+                    { children }
+                </div>
             </div>
-        </div>
-    );
+        );
+    else
+        return (
+            <></>
+        );
 }
 
 export default Popup;
