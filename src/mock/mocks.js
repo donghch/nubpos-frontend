@@ -7,12 +7,14 @@ axiosMockAdapter
             {
                 id: 10,
                 name: "Bomb",
-                price: 30.5
+                price: 30.5,
+                stock: 30
             },
             {
                 id: 20,
                 name: "fried chicken",
-                price: 2.2
+                price: 2.2,
+                stock: 50
             }
         ]
     );
