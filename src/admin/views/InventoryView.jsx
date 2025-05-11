@@ -1,11 +1,12 @@
 import Table from "@/components/custom/Table.jsx"
 import SearchBar from "@/components/custom/SearchBar.jsx"
 import Popup from "@/components/custom/Popup.jsx";
-import {Button, Pagination, Flex, Text, Input} from "@chakra-ui/react";
+import {Button, Flex, Text, Input, Stack} from "@chakra-ui/react";
 import {useEffect, useState, useRef, useCallback} from "react";
 import {Toaster, toaster} from "@/components/ui/toaster.jsx";
 import axiosMockInstance from "@/mock/index.js";
 import "@/mock/mocks.js";
+import "./InventoryView.css"
 
 const tableTitles = {
     id: "Item ID",
@@ -41,7 +42,11 @@ function InventoryView() {
 
     const [inventoryData, setInventoryData] = useState([]);
     const [itemManageOpened, setItemManageOpened] = useState(false);
+    const [itemAddOpened, setItemAddOpened] = useState(false);
     const selectedItem = useRef(null);
+
+    { /* Add Item Popup Variables */}
+    const itemPopupSaveButton = useRef(null);
 
     const openInventoryManagement = itemInfo => {
         selectedItem.current = itemInfo;
@@ -53,6 +58,25 @@ function InventoryView() {
         setItemManageOpened(false);
     };
 
+    { /* Add Item Popup Functions */}
+    const openItemAdd = () => {
+        setItemAddOpened(true);
+    }
+
+    const closeItemAdd = () => {
+        setItemAddOpened(false);
+    }
+
+    const enableButton = (button, color) => {
+        button.current.style["background"] = color;
+        button.current.disabled = false;
+    }
+
+    const disableButton = (button) => {
+        button.current.style["background"] = "grey";
+        button.current.disabled = true;
+    }
+
     const showSaveSuccessMsg = () => {
         toaster.create(
             {
@@ -60,6 +84,9 @@ function InventoryView() {
                 type: "success"
             }
         );
+        itemPopupSaveButton.current.style["background"] = "grey";
+        itemPopupSaveButton.current.disabled = true;
+        console.log(itemPopupSaveButton.current);
     };
 
     const showSaveErrorMsg = () => {
@@ -70,6 +97,11 @@ function InventoryView() {
             }
         );
     };
+
+    const addItemSave = () => {
+        showSaveSuccessMsg();
+        disableButton(itemPopupSaveButton);
+    }
 
     useEffect(
         () => {
@@ -95,10 +127,12 @@ function InventoryView() {
 
     return (
         <>
-            <p>There are more problems</p>
-            <SearchBar/>
-            <Table header={tableTitles} data={inventoryData}/>
 
+            <Flex justify={"space-between"} gap={2} alignItems={"center"}>
+                <Button className={"top-bar-button"} background={"green"}
+                        onClick={openItemAdd} fontSize={"150%"}>Add Item</Button>
+            </Flex>
+            <Table header={tableTitles} data={inventoryData}/>
 
             { /* Item Management Popup */}
             <Popup show={itemManageOpened}>
@@ -108,7 +142,7 @@ function InventoryView() {
 
                 { /* Item Information */ }
                 <Flex justify={"space-between"} gap={2}>
-                    Item Name
+                    <Text text-align={"center"}>Item Name</Text>
                     <Input type={"text"} defaultValue={selectedItem.current ? selectedItem.current.name : ""}/>
                 </Flex>
 
@@ -131,9 +165,49 @@ function InventoryView() {
                     <Button onClick={closeInventoryManagement}>Close</Button>
                 </Flex>
             </Popup>
+
+            { /* Add Item Popup */ }
+            <Popup show={itemAddOpened}>
+                <Stack gap="0.5rem">
+                    <Flex justify={"space-between"} gap={"0.5rem"}>
+                        <Text fontSize={"2xl"} fontWeight={"bold"}>Add Item</Text>
+                        <Button>Scan Item Code</Button>
+                    </Flex>
+
+                    { /* Item Information */ }
+                    <Stack direction={"row"} align={"center"} justify={"space-between"}>
+                        <Text flexShrink={0} width={"20%"}>Item ID</Text>
+                        <Input type={"text"} maxWidth={"70%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                    </Stack>
+
+                    <Stack direction={"row"} align={"center"} justify={"space-between"}>
+                        <Text flexShrink={0} width={"20%"}>Item Name</Text>
+                        <Input type={"text"} maxWidth={"70%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                    </Stack>
+
+                    { /* Item Price */ }
+                    <Stack direction={"row"} align={"center"} justify={"space-between"}>
+                        <Text flexShrink={0} width={"20%"}>Price</Text>
+                        <Input type={"number"} min={"0"} step={"0.01"} maxWidth={"70%"}
+                               pattern={"[0-9]*\.?[0-9]+"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                    </Stack>
+
+                    { /* Item Stock */ }
+                    <Stack direction={"row"} align={"center"} justify={"space-between"}>
+                        <Text flexShrink={0} width={"20%"}>Stock</Text>
+                        <Input type={"number"} min={"0"} maxWidth={"70%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                    </Stack>
+
+                    { /* Popup Operation Buttons */ }
+                    <Stack direction={"row"} justify={"end"}>
+                        <Button onClick={addItemSave} ref={itemPopupSaveButton}>Save</Button>
+                        <Button onClick={closeItemAdd}>Close</Button>
+                    </Stack>
+                </Stack>
+            </Popup>
+
             <Toaster/>
         </>
-
     );
 }
 
