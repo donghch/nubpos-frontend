@@ -21,7 +21,7 @@ const data = [
         name: "Bomb",
         price: 30.5,
         stock: 30,
-        operations: <Button>Shit</Button>
+        operations: <Button>Manage</Button>
     }
 ];
 
