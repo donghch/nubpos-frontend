@@ -1,16 +1,17 @@
-
 import Table from "@/components/custom/Table.jsx"
 import SearchBar from "@/components/custom/SearchBar.jsx"
-import SearchPopup from "@/components/custom/SearchPopup.jsx";
-import { Button, Pagination } from "@chakra-ui/react";
+import Popup from "@/components/custom/Popup.jsx";
+import {Button, Pagination, Flex, Text, Input} from "@chakra-ui/react";
+import {useEffect, useState, useRef, useCallback} from "react";
+import {Toaster, toaster} from "@/components/ui/toaster.jsx";
 import axiosMockInstance from "@/mock/index.js";
 import "@/mock/mocks.js";
-import {useEffect, useState, useRef, useCallback} from "react";
 
 const tableTitles = {
     id: "Item ID",
     name: "Item Name",
     price: "Price",
+    stock: "Stock",
     operations: "Operations"
 };
 
@@ -19,6 +20,7 @@ const data = [
         id: 10,
         name: "Bomb",
         price: 30.5,
+        stock: 30,
         operations: <Button>Shit</Button>
     }
 ];
@@ -41,13 +43,33 @@ function InventoryView() {
     const [itemManageOpened, setItemManageOpened] = useState(false);
     const selectedItem = useRef(null);
 
-    const manageInventoryItem = useCallback(
-        itemInfo => {
-            selectedItem.current = itemInfo;
-            setItemManageOpened(true);
-            console.log(`Current Item: ${itemInfo.name}`)
-        }, []
-    );
+    const openInventoryManagement = itemInfo => {
+        selectedItem.current = itemInfo;
+        setItemManageOpened(true);
+    };
+
+    const closeInventoryManagement = () => {
+        selectedItem.current = null;
+        setItemManageOpened(false);
+    };
+
+    const showSaveSuccessMsg = () => {
+        toaster.create(
+            {
+                title: "Item Information Saved",
+                type: "success"
+            }
+        );
+    };
+
+    const showSaveErrorMsg = () => {
+        toaster.create(
+            {
+                title: "Item Information Save Failed",
+                type: "error"
+            }
+        );
+    };
 
     useEffect(
         () => {
@@ -56,7 +78,8 @@ function InventoryView() {
                     data = data.map(
                         item => {
                             item["operations"] = (
-                                <Button key={`inventory-button-${item.id}`} onClick={() => manageInventoryItem(item)}>Manage</Button>
+                                <Button key={`inventory-button-${item.id}`}
+                                        onClick={() => openInventoryManagement(item)}>Manage</Button>
                             );
                             return item;
                         }
@@ -73,9 +96,42 @@ function InventoryView() {
     return (
         <>
             <p>There are more problems</p>
-            <SearchBar />
-            <Table header={tableTitles} data={inventoryData} />
-            <SearchPopup />
+            <SearchBar/>
+            <Table header={tableTitles} data={inventoryData}/>
+
+
+            { /* Item Management Popup */}
+            <Popup show={itemManageOpened}>
+                <Flex justify={"flex-start"}>
+                    <Text fontSize={"2xl"}>Item Management</Text>
+                </Flex>
+
+                { /* Item Information */ }
+                <Flex justify={"space-between"} gap={2}>
+                    Item Name
+                    <Input type={"text"} defaultValue={selectedItem.current ? selectedItem.current.name : ""}/>
+                </Flex>
+
+                { /* Item Price */ }
+                <Flex justify={"space-between"} gap={2}>
+                    Item Price
+                    <Input type={"number"} defaultValue={selectedItem.current ? selectedItem.current.price : ""}/>
+                </Flex>
+
+                { /* Item Stock */ }
+                <Flex justify={"space-between"} gap={2}>
+                    Item Stock
+                    <Input type={"number"} defaultValue={selectedItem.current ? selectedItem.current.stock : ""}/>
+                </Flex>
+
+
+                { /* Popup Operation Buttons */ }
+                <Flex justify={"flex-end"} gap={2}>
+                    <Button onClick={showSaveErrorMsg}>Save</Button>
+                    <Button onClick={closeInventoryManagement}>Close</Button>
+                </Flex>
+            </Popup>
+            <Toaster/>
         </>
 
     );
