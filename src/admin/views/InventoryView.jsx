@@ -1,11 +1,9 @@
 import Table from "@/components/custom/Table.jsx"
-import SearchBar from "@/components/custom/SearchBar.jsx"
 import Popup from "@/components/custom/Popup.jsx";
 import {Button, Flex, Text, Input, Stack} from "@chakra-ui/react";
 import {useEffect, useState, useRef, useCallback} from "react";
 import {Toaster, toaster} from "@/components/ui/toaster.jsx";
-import axiosMockInstance from "@/mock/index.js";
-import "@/mock/mocks.js";
+import axios from "axios";
 import "./InventoryView.css"
 
 const tableTitles = {
@@ -26,16 +24,25 @@ const data = [
     }
 ];
 
+const apiUrl = "http://localhost:3000";
+
 /* Helper Functions */
 
-const inventoryURL = "http://localhost:8888/inventory";
-
 async function fetchInventory() {
-    const res = await axiosMockInstance.get(inventoryURL);
+    const res = await axios.get(`${apiUrl}/inventory`);
     if (res.status === 200)
         return res.data;
     else
         throw Error(res.status);
+}
+
+async function addItem(item) {
+    try {
+        const res = await axios.post(`${apiUrl}/inventory`, item);
+        return res.status === 201;
+    } catch (err) {
+        return false;
+    }
 }
 
 function InventoryView() {
@@ -43,10 +50,17 @@ function InventoryView() {
     const [inventoryData, setInventoryData] = useState([]);
     const [itemManageOpened, setItemManageOpened] = useState(false);
     const [itemAddOpened, setItemAddOpened] = useState(false);
+    const [seed, setSeed] = useState(0);
     const selectedItem = useRef(null);
 
     { /* Add Item Popup Variables */}
     const itemPopupSaveButton = useRef(null);
+    const addItemInfoHandle = {
+        id: useRef(null),
+        name: useRef(null),
+        price: useRef(null),
+        stock: useRef(null)
+    };
 
     const openInventoryManagement = itemInfo => {
         selectedItem.current = itemInfo;
@@ -61,6 +75,7 @@ function InventoryView() {
     { /* Add Item Popup Functions */}
     const openItemAdd = () => {
         setItemAddOpened(true);
+        disableButton(itemPopupSaveButton);
     }
 
     const closeItemAdd = () => {
@@ -86,7 +101,6 @@ function InventoryView() {
         );
         itemPopupSaveButton.current.style["background"] = "grey";
         itemPopupSaveButton.current.disabled = true;
-        console.log(itemPopupSaveButton.current);
     };
 
     const showSaveErrorMsg = () => {
@@ -99,10 +113,24 @@ function InventoryView() {
     };
 
     const addItemSave = () => {
-        showSaveSuccessMsg();
-        disableButton(itemPopupSaveButton);
+        addItem({
+                id: addItemInfoHandle.id.current.value,
+                name: addItemInfoHandle.name.current.value,
+                price: Number(addItemInfoHandle.price.current.value),
+                stock: Number(addItemInfoHandle.stock.current.value)
+            }
+        ).then(result => {
+            if (result === true) {
+                showSaveSuccessMsg();
+                closeItemAdd();
+                setSeed(Math.random());
+            } else {
+                showSaveErrorMsg();
+            }
+        } )
     }
 
+    /* Data Fetching */
     useEffect(
         () => {
             fetchInventory().then(
@@ -122,7 +150,8 @@ function InventoryView() {
                     console.log(err);
                 }
             )
-        }, []
+            // we could trigger the fetch by changing the seed
+        }, [seed]
     );
 
     return (
@@ -136,34 +165,35 @@ function InventoryView() {
 
             { /* Item Management Popup */}
             <Popup show={itemManageOpened}>
-                <Flex justify={"flex-start"}>
-                    <Text fontSize={"2xl"}>Item Management</Text>
-                </Flex>
+                <Stack gap={"0.5rem"}>
+                    <Flex justify={"flex-start"}>
+                        <Text fontSize={"2xl"} fontWeight={"bold"}>Item Management</Text>
+                    </Flex>
 
-                { /* Item Information */ }
-                <Flex justify={"space-between"} gap={2}>
-                    <Text text-align={"center"}>Item Name</Text>
-                    <Input type={"text"} defaultValue={selectedItem.current ? selectedItem.current.name : ""}/>
-                </Flex>
+                    { /* Item Information */ }
+                    <Flex justify={"space-between"} gap={2}>
+                        <Text text-align={"center"}>Item Name</Text>
+                        <Input type={"text"} defaultValue={selectedItem.current ? selectedItem.current.name : ""}/>
+                    </Flex>
 
-                { /* Item Price */ }
-                <Flex justify={"space-between"} gap={2}>
-                    Item Price
-                    <Input type={"number"} defaultValue={selectedItem.current ? selectedItem.current.price : ""}/>
-                </Flex>
+                    { /* Item Price */ }
+                    <Flex justify={"space-between"} gap={2}>
+                        Item Price
+                        <Input type={"number"} defaultValue={selectedItem.current ? selectedItem.current.price : ""}/>
+                    </Flex>
 
-                { /* Item Stock */ }
-                <Flex justify={"space-between"} gap={2}>
-                    Item Stock
-                    <Input type={"number"} defaultValue={selectedItem.current ? selectedItem.current.stock : ""}/>
-                </Flex>
+                    { /* Item Stock */ }
+                    <Flex justify={"space-between"} gap={2}>
+                        Item Stock
+                        <Input type={"number"} defaultValue={selectedItem.current ? selectedItem.current.stock : ""}/>
+                    </Flex>
 
-
-                { /* Popup Operation Buttons */ }
-                <Flex justify={"flex-end"} gap={2}>
-                    <Button onClick={showSaveErrorMsg}>Save</Button>
-                    <Button onClick={closeInventoryManagement}>Close</Button>
-                </Flex>
+                    { /* Popup Operation Buttons */ }
+                    <Flex justify={"flex-end"} gap={2}>
+                        <Button onClick={showSaveErrorMsg}>Save</Button>
+                        <Button onClick={closeInventoryManagement}>Close</Button>
+                    </Flex>
+                </Stack>
             </Popup>
 
             { /* Add Item Popup */ }
@@ -177,25 +207,25 @@ function InventoryView() {
                     { /* Item Information */ }
                     <Stack direction={"row"} align={"center"} justify={"space-between"}>
                         <Text flexShrink={0} width={"20%"}>Item ID</Text>
-                        <Input type={"text"} maxWidth={"70%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                        <Input type={"text"} ref={ addItemInfoHandle.id } maxWidth={"70%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
                     </Stack>
 
                     <Stack direction={"row"} align={"center"} justify={"space-between"}>
                         <Text flexShrink={0} width={"20%"}>Item Name</Text>
-                        <Input type={"text"} maxWidth={"70%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                        <Input type={"text"} ref={ addItemInfoHandle.name } maxWidth={"70%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
                     </Stack>
 
                     { /* Item Price */ }
                     <Stack direction={"row"} align={"center"} justify={"space-between"}>
                         <Text flexShrink={0} width={"20%"}>Price</Text>
-                        <Input type={"number"} min={"0"} step={"0.01"} maxWidth={"70%"}
+                        <Input type={"number"} ref={ addItemInfoHandle.price } min={"0"} step={"0.01"} maxWidth={"70%"}
                                pattern={"[0-9]*\.?[0-9]+"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
                     </Stack>
 
                     { /* Item Stock */ }
                     <Stack direction={"row"} align={"center"} justify={"space-between"}>
                         <Text flexShrink={0} width={"20%"}>Stock</Text>
-                        <Input type={"number"} min={"0"} maxWidth={"70%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                        <Input type={"number"} ref={ addItemInfoHandle.stock } min={"0"} maxWidth={"70%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
                     </Stack>
 
                     { /* Popup Operation Buttons */ }
