@@ -45,6 +45,21 @@ async function addItem(item) {
     }
 }
 
+/* Style Object Definitions */
+const inventoryFormStyle = {
+    direction: "column",
+    align: "center",
+    justify: "center",
+    width: "100%"
+};
+
+const inventoryFormItemStyle = {
+    direction: "row",
+    align: "center",
+    justify: "end",
+    width: "95%"
+};
+
 function InventoryView() {
 
     const [inventoryData, setInventoryData] = useState([]);
@@ -53,7 +68,7 @@ function InventoryView() {
     const [seed, setSeed] = useState(0);
     const selectedItem = useRef(null);
 
-    { /* Add Item Popup Variables */}
+    /* Add Item Popup Variables */
     const itemPopupSaveButton = useRef(null);
     const addItemInfoHandle = {
         id: useRef(null),
@@ -72,7 +87,7 @@ function InventoryView() {
         setItemManageOpened(false);
     };
 
-    { /* Add Item Popup Functions */}
+    /* Add Item Popup Functions */
     const openItemAdd = () => {
         setItemAddOpened(true);
         disableButton(itemPopupSaveButton);
@@ -130,6 +145,17 @@ function InventoryView() {
         } )
     }
 
+    /* Item Table Operation Entry */
+    function inventoryItemOperationBar(item) {
+        return (
+            <Stack direction={"row"} justify={"center"} align={"center"}>
+                <Button key={`inventory-button-${item.id}-manage`}
+                    onClick={() => openInventoryManagement(item)}>Manage</Button>
+                <Button key={`inventory-button-${item.id}-delete`} background={"red"}>Delete</Button>
+            </Stack>
+        )
+    }
+
     /* Data Fetching */
     useEffect(
         () => {
@@ -137,10 +163,7 @@ function InventoryView() {
                 data => {
                     data = data.map(
                         item => {
-                            item["operations"] = (
-                                <Button key={`inventory-button-${item.id}`}
-                                        onClick={() => openInventoryManagement(item)}>Manage</Button>
-                            );
+                            item["operations"] = inventoryItemOperationBar(item);
                             return item;
                         }
                     )
@@ -165,37 +188,40 @@ function InventoryView() {
 
             { /* Item Management Popup */}
             <Popup show={itemManageOpened}>
-                <Stack gap={"0.5rem"}>
+                <Stack gap={"0.5rem"} justify={"center"}>
                     <Flex justify={"flex-start"}>
                         <Text fontSize={"2xl"} fontWeight={"bold"}>Item Management</Text>
                     </Flex>
 
-                    { /* Item Information */ }
-                    <Flex justify={"space-between"} gap={2}>
-                        <Text text-align={"center"}>Item Name</Text>
-                        <Input type={"text"} defaultValue={selectedItem.current ? selectedItem.current.name : ""}/>
-                    </Flex>
+                    <Stack {...inventoryFormStyle}>
+                        { /* Item Information */ }
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Name</Text>
+                            <Input type={"text"} width={"80%"} defaultValue={selectedItem.current ? selectedItem.current.name : ""}/>
+                        </Stack>
 
-                    { /* Item Price */ }
-                    <Flex justify={"space-between"} gap={2}>
-                        Item Price
-                        <Input type={"number"} defaultValue={selectedItem.current ? selectedItem.current.price : ""}/>
-                    </Flex>
+                        { /* Item Price */ }
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Price</Text>
+                            <Input type={"number"} width={"80%"} defaultValue={selectedItem.current ? selectedItem.current.price : ""}/>
+                        </Stack>
 
-                    { /* Item Stock */ }
-                    <Flex justify={"space-between"} gap={2}>
-                        Item Stock
-                        <Input type={"number"} defaultValue={selectedItem.current ? selectedItem.current.stock : ""}/>
-                    </Flex>
+                        { /* Item Stock */ }
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Stock</Text>
+                            <Input type={"number"} width={"80%"} defaultValue={selectedItem.current ? selectedItem.current.stock : ""}/>
+                        </Stack>
+                    </Stack>
 
                     { /* Popup Operation Buttons */ }
-                    <Flex justify={"flex-end"} gap={2}>
+                    <Stack direction={"row"} justify={"end"}>
                         <Button onClick={showSaveErrorMsg}>Save</Button>
                         <Button onClick={closeInventoryManagement}>Close</Button>
-                    </Flex>
+                    </Stack>
                 </Stack>
             </Popup>
 
+            
             { /* Add Item Popup */ }
             <Popup show={itemAddOpened}>
                 <Stack gap="0.5rem">
@@ -204,28 +230,30 @@ function InventoryView() {
                         <Button>Scan Item Code</Button>
                     </Flex>
 
-                    { /* Item Information */ }
-                    <Stack direction={"row"} align={"center"} justify={"space-between"}>
-                        <Text flexShrink={0} width={"20%"}>Item ID</Text>
-                        <Input type={"text"} ref={ addItemInfoHandle.id } maxWidth={"70%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
-                    </Stack>
+                    <Stack {...inventoryFormStyle}>
+                        { /* Item Information */ }
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Item ID</Text>
+                            <Input type={"text"} ref={ addItemInfoHandle.id } maxWidth={"80%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                        </Stack>
 
-                    <Stack direction={"row"} align={"center"} justify={"space-between"}>
-                        <Text flexShrink={0} width={"20%"}>Item Name</Text>
-                        <Input type={"text"} ref={ addItemInfoHandle.name } maxWidth={"70%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
-                    </Stack>
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Item Name</Text>
+                            <Input type={"text"} ref={ addItemInfoHandle.name } maxWidth={"80%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                        </Stack>
 
-                    { /* Item Price */ }
-                    <Stack direction={"row"} align={"center"} justify={"space-between"}>
-                        <Text flexShrink={0} width={"20%"}>Price</Text>
-                        <Input type={"number"} ref={ addItemInfoHandle.price } min={"0"} step={"0.01"} maxWidth={"70%"}
-                               pattern={"[0-9]*\.?[0-9]+"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
-                    </Stack>
+                        { /* Item Price */ }
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Price</Text>
+                            <Input type={"number"} ref={ addItemInfoHandle.price } min={"0"} step={"0.01"} maxWidth={"80%"}
+                                   pattern={"[0-9]*\.?[0-9]+"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                        </Stack>
 
-                    { /* Item Stock */ }
-                    <Stack direction={"row"} align={"center"} justify={"space-between"}>
-                        <Text flexShrink={0} width={"20%"}>Stock</Text>
-                        <Input type={"number"} ref={ addItemInfoHandle.stock } min={"0"} maxWidth={"70%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                        { /* Item Stock */ }
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Stock</Text>
+                            <Input type={"number"} ref={ addItemInfoHandle.stock } min={"0"} maxWidth={"80%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                        </Stack>
                     </Stack>
 
                     { /* Popup Operation Buttons */ }
