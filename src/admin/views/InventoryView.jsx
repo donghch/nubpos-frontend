@@ -145,7 +145,7 @@ function InventoryView() {
         } )
     }
 
-    /* Item Table Operation Entry */
+    /* Helper Components */
     function inventoryItemOperationBar(item) {
         return (
             <Stack direction={"row"} justify={"center"} align={"center"}>
@@ -154,6 +154,15 @@ function InventoryView() {
                 <Button key={`inventory-button-${item.id}-delete`} background={"red"}>Delete</Button>
             </Stack>
         )
+    }
+
+    function popupTitle(text, children) {
+        return (
+            <Flex justify={"space-between"} gap={"0.5rem"}>
+                <Text fontSize={"2xl"} fontWeight={"bold"}>{ text }</Text>
+                {children}
+            </Flex>
+        );
     }
 
     /* Data Fetching */
@@ -189,9 +198,8 @@ function InventoryView() {
             { /* Item Management Popup */}
             <Popup show={itemManageOpened}>
                 <Stack gap={"0.5rem"} justify={"center"}>
-                    <Flex justify={"flex-start"}>
-                        <Text fontSize={"2xl"} fontWeight={"bold"}>Item Management</Text>
-                    </Flex>
+
+                    { popupTitle("Item Management") }
 
                     <Stack {...inventoryFormStyle}>
                         { /* Item Information */ }
@@ -225,10 +233,8 @@ function InventoryView() {
             { /* Add Item Popup */ }
             <Popup show={itemAddOpened}>
                 <Stack gap="0.5rem">
-                    <Flex justify={"space-between"} gap={"0.5rem"}>
-                        <Text fontSize={"2xl"} fontWeight={"bold"}>Add Item</Text>
-                        <Button>Scan Item Code</Button>
-                    </Flex>
+
+                    { popupTitle("Add Item", (<Button>Scan Item Code</Button>)) }
 
                     <Stack {...inventoryFormStyle}>
                         { /* Item Information */ }
