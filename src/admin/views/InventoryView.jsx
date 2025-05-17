@@ -1,7 +1,7 @@
 import Table from "@/components/custom/Table.jsx"
 import Popup from "@/components/custom/Popup.jsx";
 import {Button, Flex, Text, Input, Stack} from "@chakra-ui/react";
-import {useEffect, useState, useRef, useCallback} from "react";
+import {useEffect, useState, useRef} from "react";
 import {Toaster, toaster} from "@/components/ui/toaster.jsx";
 import axios from "axios";
 import "./InventoryView.css"
@@ -13,16 +13,6 @@ const tableTitles = {
     stock: "Stock",
     operations: "Operations"
 };
-
-const data = [
-    {
-        id: 10,
-        name: "Bomb",
-        price: 30.5,
-        stock: 30,
-        operations: <Button>Manage</Button>
-    }
-];
 
 const apiUrl = "http://localhost:3000";
 
@@ -40,6 +30,15 @@ async function addItem(item) {
     try {
         const res = await axios.post(`${apiUrl}/inventory`, item);
         return res.status === 201;
+    } catch (err) {
+        return false;
+    }
+}
+
+async function deleteItem(id) {
+    try {
+        const res = await axios.delete(`${apiUrl}/inventory/${id}`);
+        return res.status === 200;
     } catch (err) {
         return false;
     }
@@ -65,10 +64,11 @@ function InventoryView() {
     const [inventoryData, setInventoryData] = useState([]);
     const [itemManageOpened, setItemManageOpened] = useState(false);
     const [itemAddOpened, setItemAddOpened] = useState(false);
+    const [itemDeleteOpened, setItemDeleteOpened] = useState(false);
     const [seed, setSeed] = useState(0);
     const selectedItem = useRef(null);
 
-    /* Add Item Popup Variables */
+    /* Manage Item Popup Variables */
     const itemPopupSaveButton = useRef(null);
     const addItemInfoHandle = {
         id: useRef(null),
@@ -127,7 +127,7 @@ function InventoryView() {
         );
     };
 
-    const addItemSave = () => {
+    const addItemHandler = () => {
         addItem({
                 id: addItemInfoHandle.id.current.value,
                 name: addItemInfoHandle.name.current.value,
@@ -145,13 +145,56 @@ function InventoryView() {
         } )
     }
 
+    /* Delete Item Popup Functions */
+    const openDeleteItem = item => {
+        selectedItem.current = item;
+        setItemDeleteOpened(true);
+    };
+
+    const closeDeleteItem = () => {
+        selectedItem.current = null;
+        setItemDeleteOpened(false);
+    };
+
+    const showDeleteSuccessMsg = () => {
+        toaster.create(
+            {
+                title: "Item Deleted",
+                type: "success"
+            }
+        )
+    };
+
+    const showDeleteErrorMsg = () => {
+        toaster.create(
+            {
+                title: "Failed to delete item",
+                type: "error"
+            }
+        );
+    };
+
+    const deleteItemHandler = () => {
+        deleteItem(selectedItem.current.id).then(result => {
+            if (result === true) {
+                closeDeleteItem();
+                showDeleteSuccessMsg();
+                setSeed(Math.random());
+            } else {
+                showDeleteErrorMsg();
+                closeDeleteItem();
+            }
+        });
+    }
+
     /* Helper Components */
     function inventoryItemOperationBar(item) {
         return (
             <Stack direction={"row"} justify={"center"} align={"center"}>
                 <Button key={`inventory-button-${item.id}-manage`}
                     onClick={() => openInventoryManagement(item)}>Manage</Button>
-                <Button key={`inventory-button-${item.id}-delete`} background={"red"}>Delete</Button>
+                <Button key={`inventory-button-${item.id}-delete`}
+                    onClick={ () => { openDeleteItem(item) }} background={"red"}>Delete</Button>
             </Stack>
         )
     }
@@ -264,10 +307,24 @@ function InventoryView() {
 
                     { /* Popup Operation Buttons */ }
                     <Stack direction={"row"} justify={"end"}>
-                        <Button onClick={addItemSave} ref={itemPopupSaveButton}>Save</Button>
+                        <Button onClick={addItemHandler} ref={itemPopupSaveButton}>Save</Button>
                         <Button onClick={closeItemAdd}>Close</Button>
                     </Stack>
                 </Stack>
+            </Popup>
+
+            { /* Delete Confirmation Popup */}
+            <Popup show={itemDeleteOpened}>
+
+                <Stack gap="0.5rem">
+                    { popupTitle("Sure to Delete?") }
+
+                    <Stack>
+                        <Button background={"red"} onClick={ deleteItemHandler }>YES, DELETE</Button>
+                        <Button onClick={ closeDeleteItem }>NO</Button>
+                    </Stack>
+                </Stack>
+
             </Popup>
 
             <Toaster/>
