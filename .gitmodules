@@ -1,0 +1,3 @@
+[submodule "src/nubpos-types"]
+	path = src/nubpos-types
+	url = https://github.com/donghch/nubpos-types.git
