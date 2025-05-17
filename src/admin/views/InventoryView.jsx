@@ -71,26 +71,39 @@ const inventoryFormItemStyle = {
 function InventoryView() {
 
     const [inventoryData, setInventoryData] = useState([]);
-    const [itemManageOpened, setItemManageOpened] = useState(false);
-    const [itemAddOpened, setItemAddOpened] = useState(false);
-    const [itemDeleteOpened, setItemDeleteOpened] = useState(false);
+
     const [seed, setSeed] = useState(0);
     const selectedItem = useRef(null);
 
-    /* Manage Item Popup Variables */
-    const itemPopupSaveButton = useRef(null);
+    /* General Functions */
+    const showSaveSuccessMsg = () => {
+        toaster.create(
+            {
+                title: "Item Information Saved",
+                type: "success"
+            }
+        );
+    };
+
+    const showSaveErrorMsg = () => {
+        toaster.create(
+            {
+                title: "Item Information Save Failed",
+                type: "error"
+            }
+        );
+    };
+
+    /* Item Management Variables */
+    const [itemManageOpened, setItemManageOpened] = useState(false);
     const addItemInfoHandle = {
         id: useRef(null),
         name: useRef(null),
         price: useRef(null),
         stock: useRef(null)
     };
-    const updateItemInfoHandle = {
-        name: useRef(null),
-        price: useRef(null),
-        stock: useRef(null)
-    };
 
+    /* Item Management Functions */
     const openInventoryManagement = itemInfo => {
         selectedItem.current = itemInfo;
         setItemManageOpened(true);
@@ -116,52 +129,30 @@ function InventoryView() {
                     showSaveSuccessMsg();
                     setSeed(Math.random());
                 } else {
-                    closeInventoryManagement();
                     showSaveErrorMsg();
                 }
             }
         )
     }
 
+    /* Add Item Popup Variables */
+    const [isAddItemSaveDisabled, setIsAddItemSaveDisabled] = useState(true);
+    const [itemAddOpened, setItemAddOpened] = useState(false);
+    const updateItemInfoHandle = {
+        name: useRef(null),
+        price: useRef(null),
+        stock: useRef(null)
+    };
+
     /* Add Item Popup Functions */
     const openItemAdd = () => {
         setItemAddOpened(true);
-        disableButton(itemPopupSaveButton);
     }
 
     const closeItemAdd = () => {
         setItemAddOpened(false);
+        setIsAddItemSaveDisabled(true);
     }
-
-    const enableButton = (button, color) => {
-        button.current.style["background"] = color;
-        button.current.disabled = false;
-    }
-
-    const disableButton = (button) => {
-        button.current.style["background"] = "grey";
-        button.current.disabled = true;
-    }
-
-    const showSaveSuccessMsg = () => {
-        toaster.create(
-            {
-                title: "Item Information Saved",
-                type: "success"
-            }
-        );
-        itemPopupSaveButton.current.style["background"] = "grey";
-        itemPopupSaveButton.current.disabled = true;
-    };
-
-    const showSaveErrorMsg = () => {
-        toaster.create(
-            {
-                title: "Item Information Save Failed",
-                type: "error"
-            }
-        );
-    };
 
     const addItemHandler = () => {
         addItem({
@@ -180,6 +171,9 @@ function InventoryView() {
             }
         } )
     }
+
+    /* Delete Item Popup Variables */
+    const [itemDeleteOpened, setItemDeleteOpened] = useState(false);
 
     /* Delete Item Popup Functions */
     const openDeleteItem = item => {
@@ -319,31 +313,31 @@ function InventoryView() {
                         { /* Item Information */ }
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Item ID</Text>
-                            <Input type={"text"} ref={ addItemInfoHandle.id } maxWidth={"80%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                            <Input type={"text"} ref={ addItemInfoHandle.id } maxWidth={"80%"} onChange={() => setIsAddItemSaveDisabled(false)}/>
                         </Stack>
 
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Item Name</Text>
-                            <Input type={"text"} ref={ addItemInfoHandle.name } maxWidth={"80%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                            <Input type={"text"} ref={ addItemInfoHandle.name } maxWidth={"80%"} onChange={() => setIsAddItemSaveDisabled(false)}/>
                         </Stack>
 
                         { /* Item Price */ }
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Price</Text>
                             <Input type={"number"} ref={ addItemInfoHandle.price } min={"0"} step={"0.01"} maxWidth={"80%"}
-                                   pattern={"[0-9]*\.?[0-9]+"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                                   pattern={"[0-9]*\.?[0-9]+"} onChange={() => setIsAddItemSaveDisabled(false)}/>
                         </Stack>
 
                         { /* Item Stock */ }
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Stock</Text>
-                            <Input type={"number"} ref={ addItemInfoHandle.stock } min={"0"} maxWidth={"80%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                            <Input type={"number"} ref={ addItemInfoHandle.stock } min={"0"} maxWidth={"80%"} onChange={() => setIsAddItemSaveDisabled(false)}/>
                         </Stack>
                     </Stack>
 
                     { /* Popup Operation Buttons */ }
                     <Stack direction={"row"} justify={"end"}>
-                        <Button onClick={addItemHandler} ref={itemPopupSaveButton}>Save</Button>
+                        <Button onClick={addItemHandler} disabled={ isAddItemSaveDisabled }>Save</Button>
                         <Button onClick={closeItemAdd}>Close</Button>
                     </Stack>
                 </Stack>
