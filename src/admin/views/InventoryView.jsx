@@ -18,7 +18,7 @@ const apiUrl = "http://localhost:3000";
 
 /* Helper Functions */
 
-async function fetchInventory() {
+const fetchInventory = async () => {
     const res = await axios.get(`${apiUrl}/inventory`);
     if (res.status === 200)
         return res.data;
@@ -26,7 +26,7 @@ async function fetchInventory() {
         throw Error(res.status);
 }
 
-async function addItem(item) {
+const addItem = async (item) => {
     try {
         const res = await axios.post(`${apiUrl}/inventory`, item);
         return res.status === 201;
@@ -35,9 +35,18 @@ async function addItem(item) {
     }
 }
 
-async function deleteItem(id) {
+const deleteItem = async (id) => {
     try {
         const res = await axios.delete(`${apiUrl}/inventory/${id}`);
+        return res.status === 200;
+    } catch (err) {
+        return false;
+    }
+}
+
+async function updateItem(item) {
+    try {
+        const res = await axios.put(`${apiUrl}/inventory/${item.id}`, item);
         return res.status === 200;
     } catch (err) {
         return false;
@@ -76,6 +85,11 @@ function InventoryView() {
         price: useRef(null),
         stock: useRef(null)
     };
+    const updateItemInfoHandle = {
+        name: useRef(null),
+        price: useRef(null),
+        stock: useRef(null)
+    };
 
     const openInventoryManagement = itemInfo => {
         selectedItem.current = itemInfo;
@@ -86,6 +100,28 @@ function InventoryView() {
         selectedItem.current = null;
         setItemManageOpened(false);
     };
+
+    const updateItemHandler = () => {
+        updateItem(
+            {
+                id: selectedItem.current.id,
+                name: updateItemInfoHandle.name.current.value,
+                price: Number(updateItemInfoHandle.price.current.value),
+                stock: Number(updateItemInfoHandle.stock.current.value)
+            }
+        ).then(
+            result => {
+                if (result === true) {
+                    closeInventoryManagement();
+                    showSaveSuccessMsg();
+                    setSeed(Math.random());
+                } else {
+                    closeInventoryManagement();
+                    showSaveErrorMsg();
+                }
+            }
+        )
+    }
 
     /* Add Item Popup Functions */
     const openItemAdd = () => {
@@ -248,26 +284,26 @@ function InventoryView() {
                         { /* Item Information */ }
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Name</Text>
-                            <Input type={"text"} width={"80%"} defaultValue={selectedItem.current ? selectedItem.current.name : ""}/>
+                            <Input type={"text"} width={"80%"} ref={ updateItemInfoHandle.name } defaultValue={selectedItem.current ? selectedItem.current.name : ""}/>
                         </Stack>
 
                         { /* Item Price */ }
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Price</Text>
-                            <Input type={"number"} width={"80%"} defaultValue={selectedItem.current ? selectedItem.current.price : ""}/>
+                            <Input type={"number"} width={"80%"} ref={ updateItemInfoHandle.price } defaultValue={selectedItem.current ? selectedItem.current.price : ""}/>
                         </Stack>
 
                         { /* Item Stock */ }
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Stock</Text>
-                            <Input type={"number"} width={"80%"} defaultValue={selectedItem.current ? selectedItem.current.stock : ""}/>
+                            <Input type={"number"} width={"80%"} ref={ updateItemInfoHandle.stock } defaultValue={selectedItem.current ? selectedItem.current.stock : ""}/>
                         </Stack>
                     </Stack>
 
                     { /* Popup Operation Buttons */ }
                     <Stack direction={"row"} justify={"end"}>
-                        <Button onClick={showSaveErrorMsg}>Save</Button>
-                        <Button onClick={closeInventoryManagement}>Close</Button>
+                        <Button onClick={ updateItemHandler }>Save</Button>
+                        <Button onClick={ closeInventoryManagement }>Close</Button>
                     </Stack>
                 </Stack>
             </Popup>
