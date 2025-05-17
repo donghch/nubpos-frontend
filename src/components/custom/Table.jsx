@@ -1,4 +1,5 @@
 
+import { Text } from "@chakra-ui/react";
 import "./table.css"
 
 function Table({ header, data }) {
@@ -7,7 +8,9 @@ function Table({ header, data }) {
     let renderedHeaders = [];
     for (const key in header) {
         renderedHeaders.push(
-            <th key={key} scope={"col"} >{ header[key] }</th>
+            <th key={key} scope={"col"} >
+                <Text fontWeight={"bold"}>{ header[key] }</Text>
+            </th>
         );
     }
 

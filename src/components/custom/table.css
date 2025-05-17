@@ -4,7 +4,7 @@ table {
     margin-top: 10px;
 }
 
-thead > th {
+thead tr {
     background-color: black;
     color: white;
     height: 50px;

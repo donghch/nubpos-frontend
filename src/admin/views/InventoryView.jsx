@@ -1,11 +1,10 @@
 import Table from "@/components/custom/Table.jsx"
-import SearchBar from "@/components/custom/SearchBar.jsx"
 import Popup from "@/components/custom/Popup.jsx";
-import {Button, Pagination, Flex, Text, Input} from "@chakra-ui/react";
-import {useEffect, useState, useRef, useCallback} from "react";
+import {Button, Flex, Text, Input, Stack} from "@chakra-ui/react";
+import {useEffect, useState, useRef} from "react";
 import {Toaster, toaster} from "@/components/ui/toaster.jsx";
-import axiosMockInstance from "@/mock/index.js";
-import "@/mock/mocks.js";
+import axios from "axios";
+import "./InventoryView.css"
 
 const tableTitles = {
     id: "Item ID",
@@ -15,33 +14,82 @@ const tableTitles = {
     operations: "Operations"
 };
 
-const data = [
-    {
-        id: 10,
-        name: "Bomb",
-        price: 30.5,
-        stock: 30,
-        operations: <Button>Manage</Button>
-    }
-];
+const apiUrl = "http://localhost:3000";
 
 /* Helper Functions */
 
-const inventoryURL = "http://localhost:8888/inventory";
-
-async function fetchInventory() {
-    const res = await axiosMockInstance.get(inventoryURL);
+const fetchInventory = async () => {
+    const res = await axios.get(`${apiUrl}/inventory`);
     if (res.status === 200)
         return res.data;
     else
         throw Error(res.status);
 }
 
+const addItem = async (item) => {
+    try {
+        const res = await axios.post(`${apiUrl}/inventory`, item);
+        return res.status === 201;
+    } catch (err) {
+        return false;
+    }
+}
+
+const deleteItem = async (id) => {
+    try {
+        const res = await axios.delete(`${apiUrl}/inventory/${id}`);
+        return res.status === 200;
+    } catch (err) {
+        return false;
+    }
+}
+
+async function updateItem(item) {
+    try {
+        const res = await axios.put(`${apiUrl}/inventory/${item.id}`, item);
+        return res.status === 200;
+    } catch (err) {
+        return false;
+    }
+}
+
+/* Style Object Definitions */
+const inventoryFormStyle = {
+    direction: "column",
+    align: "center",
+    justify: "center",
+    width: "100%"
+};
+
+const inventoryFormItemStyle = {
+    direction: "row",
+    align: "center",
+    justify: "end",
+    width: "95%"
+};
+
 function InventoryView() {
 
     const [inventoryData, setInventoryData] = useState([]);
     const [itemManageOpened, setItemManageOpened] = useState(false);
+    const [itemAddOpened, setItemAddOpened] = useState(false);
+    const [itemDeleteOpened, setItemDeleteOpened] = useState(false);
+    const [seed, setSeed] = useState(0);
     const selectedItem = useRef(null);
+
+    /* Manage Item Popup Variables */
+    const itemPopupSaveButton = useRef(null);
+    const addItemInfoHandle = {
+        id: useRef(null),
+        name: useRef(null),
+        price: useRef(null),
+        stock: useRef(null)
+    };
+    const updateItemInfoHandle = {
+        name: useRef(null),
+        price: useRef(null),
+        stock: useRef(null)
+    };
 
     const openInventoryManagement = itemInfo => {
         selectedItem.current = itemInfo;
@@ -53,6 +101,48 @@ function InventoryView() {
         setItemManageOpened(false);
     };
 
+    const updateItemHandler = () => {
+        updateItem(
+            {
+                id: selectedItem.current.id,
+                name: updateItemInfoHandle.name.current.value,
+                price: Number(updateItemInfoHandle.price.current.value),
+                stock: Number(updateItemInfoHandle.stock.current.value)
+            }
+        ).then(
+            result => {
+                if (result === true) {
+                    closeInventoryManagement();
+                    showSaveSuccessMsg();
+                    setSeed(Math.random());
+                } else {
+                    closeInventoryManagement();
+                    showSaveErrorMsg();
+                }
+            }
+        )
+    }
+
+    /* Add Item Popup Functions */
+    const openItemAdd = () => {
+        setItemAddOpened(true);
+        disableButton(itemPopupSaveButton);
+    }
+
+    const closeItemAdd = () => {
+        setItemAddOpened(false);
+    }
+
+    const enableButton = (button, color) => {
+        button.current.style["background"] = color;
+        button.current.disabled = false;
+    }
+
+    const disableButton = (button) => {
+        button.current.style["background"] = "grey";
+        button.current.disabled = true;
+    }
+
     const showSaveSuccessMsg = () => {
         toaster.create(
             {
@@ -60,6 +150,8 @@ function InventoryView() {
                 type: "success"
             }
         );
+        itemPopupSaveButton.current.style["background"] = "grey";
+        itemPopupSaveButton.current.disabled = true;
     };
 
     const showSaveErrorMsg = () => {
@@ -71,16 +163,95 @@ function InventoryView() {
         );
     };
 
+    const addItemHandler = () => {
+        addItem({
+                id: addItemInfoHandle.id.current.value,
+                name: addItemInfoHandle.name.current.value,
+                price: Number(addItemInfoHandle.price.current.value),
+                stock: Number(addItemInfoHandle.stock.current.value)
+            }
+        ).then(result => {
+            if (result === true) {
+                showSaveSuccessMsg();
+                closeItemAdd();
+                setSeed(Math.random());
+            } else {
+                showSaveErrorMsg();
+            }
+        } )
+    }
+
+    /* Delete Item Popup Functions */
+    const openDeleteItem = item => {
+        selectedItem.current = item;
+        setItemDeleteOpened(true);
+    };
+
+    const closeDeleteItem = () => {
+        selectedItem.current = null;
+        setItemDeleteOpened(false);
+    };
+
+    const showDeleteSuccessMsg = () => {
+        toaster.create(
+            {
+                title: "Item Deleted",
+                type: "success"
+            }
+        )
+    };
+
+    const showDeleteErrorMsg = () => {
+        toaster.create(
+            {
+                title: "Failed to delete item",
+                type: "error"
+            }
+        );
+    };
+
+    const deleteItemHandler = () => {
+        deleteItem(selectedItem.current.id).then(result => {
+            if (result === true) {
+                closeDeleteItem();
+                showDeleteSuccessMsg();
+                setSeed(Math.random());
+            } else {
+                showDeleteErrorMsg();
+                closeDeleteItem();
+            }
+        });
+    }
+
+    /* Helper Components */
+    function inventoryItemOperationBar(item) {
+        return (
+            <Stack direction={"row"} justify={"center"} align={"center"}>
+                <Button key={`inventory-button-${item.id}-manage`}
+                    onClick={() => openInventoryManagement(item)}>Manage</Button>
+                <Button key={`inventory-button-${item.id}-delete`}
+                    onClick={ () => { openDeleteItem(item) }} background={"red"}>Delete</Button>
+            </Stack>
+        )
+    }
+
+    function popupTitle(text, children) {
+        return (
+            <Flex justify={"space-between"} gap={"0.5rem"}>
+                <Text fontSize={"2xl"} fontWeight={"bold"}>{ text }</Text>
+                {children}
+            </Flex>
+        );
+    }
+
+    /* Data Fetching */
     useEffect(
         () => {
             fetchInventory().then(
                 data => {
                     data = data.map(
                         item => {
-                            item["operations"] = (
-                                <Button key={`inventory-button-${item.id}`}
-                                        onClick={() => openInventoryManagement(item)}>Manage</Button>
-                            );
+                            item["operations"] = inventoryItemOperationBar(item);
                             return item;
                         }
                     )
@@ -90,50 +261,110 @@ function InventoryView() {
                     console.log(err);
                 }
             )
-        }, []
+            // we could trigger the fetch by changing the seed
+        }, [seed]
     );
 
     return (
         <>
-            <p>There are more problems</p>
-            <SearchBar/>
-            <Table header={tableTitles} data={inventoryData}/>
 
+            <Flex justify={"space-between"} gap={2} alignItems={"center"}>
+                <Button className={"top-bar-button"} background={"green"}
+                        onClick={openItemAdd} fontSize={"150%"}>Add Item</Button>
+            </Flex>
+            <Table header={tableTitles} data={inventoryData}/>
 
             { /* Item Management Popup */}
             <Popup show={itemManageOpened}>
-                <Flex justify={"flex-start"}>
-                    <Text fontSize={"2xl"}>Item Management</Text>
-                </Flex>
+                <Stack gap={"0.5rem"} justify={"center"}>
 
-                { /* Item Information */ }
-                <Flex justify={"space-between"} gap={2}>
-                    Item Name
-                    <Input type={"text"} defaultValue={selectedItem.current ? selectedItem.current.name : ""}/>
-                </Flex>
+                    { popupTitle("Item Management") }
 
-                { /* Item Price */ }
-                <Flex justify={"space-between"} gap={2}>
-                    Item Price
-                    <Input type={"number"} defaultValue={selectedItem.current ? selectedItem.current.price : ""}/>
-                </Flex>
+                    <Stack {...inventoryFormStyle}>
+                        { /* Item Information */ }
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Name</Text>
+                            <Input type={"text"} width={"80%"} ref={ updateItemInfoHandle.name } defaultValue={selectedItem.current ? selectedItem.current.name : ""}/>
+                        </Stack>
 
-                { /* Item Stock */ }
-                <Flex justify={"space-between"} gap={2}>
-                    Item Stock
-                    <Input type={"number"} defaultValue={selectedItem.current ? selectedItem.current.stock : ""}/>
-                </Flex>
+                        { /* Item Price */ }
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Price</Text>
+                            <Input type={"number"} width={"80%"} ref={ updateItemInfoHandle.price } defaultValue={selectedItem.current ? selectedItem.current.price : ""}/>
+                        </Stack>
 
+                        { /* Item Stock */ }
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Stock</Text>
+                            <Input type={"number"} width={"80%"} ref={ updateItemInfoHandle.stock } defaultValue={selectedItem.current ? selectedItem.current.stock : ""}/>
+                        </Stack>
+                    </Stack>
 
-                { /* Popup Operation Buttons */ }
-                <Flex justify={"flex-end"} gap={2}>
-                    <Button onClick={showSaveErrorMsg}>Save</Button>
-                    <Button onClick={closeInventoryManagement}>Close</Button>
-                </Flex>
+                    { /* Popup Operation Buttons */ }
+                    <Stack direction={"row"} justify={"end"}>
+                        <Button onClick={ updateItemHandler }>Save</Button>
+                        <Button onClick={ closeInventoryManagement }>Close</Button>
+                    </Stack>
+                </Stack>
             </Popup>
+
+            
+            { /* Add Item Popup */ }
+            <Popup show={itemAddOpened}>
+                <Stack gap="0.5rem">
+
+                    { popupTitle("Add Item", (<Button>Scan Item Code</Button>)) }
+
+                    <Stack {...inventoryFormStyle}>
+                        { /* Item Information */ }
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Item ID</Text>
+                            <Input type={"text"} ref={ addItemInfoHandle.id } maxWidth={"80%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                        </Stack>
+
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Item Name</Text>
+                            <Input type={"text"} ref={ addItemInfoHandle.name } maxWidth={"80%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                        </Stack>
+
+                        { /* Item Price */ }
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Price</Text>
+                            <Input type={"number"} ref={ addItemInfoHandle.price } min={"0"} step={"0.01"} maxWidth={"80%"}
+                                   pattern={"[0-9]*\.?[0-9]+"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                        </Stack>
+
+                        { /* Item Stock */ }
+                        <Stack {...inventoryFormItemStyle}>
+                            <Text flexShrink={0}>Stock</Text>
+                            <Input type={"number"} ref={ addItemInfoHandle.stock } min={"0"} maxWidth={"80%"} onChange={() => enableButton(itemPopupSaveButton, "black")}/>
+                        </Stack>
+                    </Stack>
+
+                    { /* Popup Operation Buttons */ }
+                    <Stack direction={"row"} justify={"end"}>
+                        <Button onClick={addItemHandler} ref={itemPopupSaveButton}>Save</Button>
+                        <Button onClick={closeItemAdd}>Close</Button>
+                    </Stack>
+                </Stack>
+            </Popup>
+
+            { /* Delete Confirmation Popup */}
+            <Popup show={itemDeleteOpened}>
+
+                <Stack gap="0.5rem">
+                    { popupTitle("Sure to Delete?") }
+
+                    <Stack>
+                        <Button background={"red"} onClick={ deleteItemHandler }>YES, DELETE</Button>
+                        <Button onClick={ closeDeleteItem }>NO</Button>
+                    </Stack>
+                </Stack>
+
+            </Popup>
+
             <Toaster/>
         </>
-
     );
 }
 
