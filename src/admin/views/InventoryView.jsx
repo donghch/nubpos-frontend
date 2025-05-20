@@ -96,8 +96,10 @@ function InventoryView() {
 
     /* Item Management Variables */
     const [itemManageOpened, setItemManageOpened] = useState(false);
-    const addItemInfoHandle = {
-        id: useRef(null),
+    const [updateItemName, setUpdateItemName] = useState("");
+    const [updateItemPrice, setUpdateItemPrice] = useState(0);
+    const [updateItemStock, setUpdateItemStock] = useState(0);
+    const updateItemInfoHandle = {
         name: useRef(null),
         price: useRef(null),
         stock: useRef(null)
@@ -106,6 +108,9 @@ function InventoryView() {
     /* Item Management Functions */
     const openInventoryManagement = itemInfo => {
         selectedItem.current = itemInfo;
+        setUpdateItemName(itemInfo.name);
+        setUpdateItemPrice(itemInfo.price);
+        setUpdateItemStock(itemInfo.stock);
         setItemManageOpened(true);
     };
 
@@ -138,15 +143,18 @@ function InventoryView() {
     /* Add Item Popup Variables */
     const [isAddItemSaveDisabled, setIsAddItemSaveDisabled] = useState(true);
     const [itemAddOpened, setItemAddOpened] = useState(false);
-    const updateItemInfoHandle = {
-        name: useRef(null),
-        price: useRef(null),
-        stock: useRef(null)
-    };
+    const [addItemID, setAddItemID] = useState("");
+    const [addItemName, setAddItemName] = useState("");
+    const [addItemPrice, setAddItemPrice] = useState(0);
+    const [addItemStock, setAddItemStock] = useState(0);
 
     /* Add Item Popup Functions */
     const openItemAdd = () => {
         setItemAddOpened(true);
+        setAddItemID("");
+        setAddItemName("");
+        setAddItemPrice(0);
+        setAddItemStock(0);
     }
 
     const closeItemAdd = () => {
@@ -156,10 +164,10 @@ function InventoryView() {
 
     const addItemHandler = () => {
         addItem({
-                id: addItemInfoHandle.id.current.value,
-                name: addItemInfoHandle.name.current.value,
-                price: Number(addItemInfoHandle.price.current.value),
-                stock: Number(addItemInfoHandle.stock.current.value)
+                id: addItemID,
+                name: addItemName,
+                price: Number(addItemPrice),
+                stock: Number(addItemStock),
             }
         ).then(result => {
             if (result === true) {
@@ -278,19 +286,31 @@ function InventoryView() {
                         { /* Item Information */ }
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Name</Text>
-                            <Input type={"text"} width={"80%"} ref={ updateItemInfoHandle.name } defaultValue={selectedItem.current ? selectedItem.current.name : ""}/>
+                            <Input type={"text"} width={"80%"} value={updateItemName}
+                                   onChange={e => {
+                                       setUpdateItemName(e.target.value);
+                                   }}
+                            />
                         </Stack>
 
                         { /* Item Price */ }
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Price</Text>
-                            <Input type={"number"} width={"80%"} ref={ updateItemInfoHandle.price } defaultValue={selectedItem.current ? selectedItem.current.price : ""}/>
+                            <Input type={"number"} width={"80%"} value={updateItemPrice}
+                                   onChange={e => {
+                                       setUpdateItemPrice(e.target.value);
+                                   }}
+                            />
                         </Stack>
 
                         { /* Item Stock */ }
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Stock</Text>
-                            <Input type={"number"} width={"80%"} ref={ updateItemInfoHandle.stock } defaultValue={selectedItem.current ? selectedItem.current.stock : ""}/>
+                            <Input type={"number"} width={"80%"} value={updateItemStock}
+                                   onChange={e => {
+                                       setUpdateItemStock(e.target.value);
+                                   }}
+                            />
                         </Stack>
                     </Stack>
 
@@ -313,25 +333,41 @@ function InventoryView() {
                         { /* Item Information */ }
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Item ID</Text>
-                            <Input type={"text"} ref={ addItemInfoHandle.id } maxWidth={"80%"} onChange={() => setIsAddItemSaveDisabled(false)}/>
+                            <Input type={"text"} value={addItemID} onChange={
+                                (e) => {
+                                    setAddItemID(e.target.value);
+                                    setIsAddItemSaveDisabled(false);
+                                }} maxWidth={"80%"}/>
                         </Stack>
 
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Item Name</Text>
-                            <Input type={"text"} ref={ addItemInfoHandle.name } maxWidth={"80%"} onChange={() => setIsAddItemSaveDisabled(false)}/>
+                            <Input type={"text"} value={addItemName} maxWidth={"80%"} onChange={
+                                (e) => {
+                                    setAddItemName(e.target.value);
+                                    setIsAddItemSaveDisabled(false);
+                                }}/>
                         </Stack>
 
                         { /* Item Price */ }
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Price</Text>
-                            <Input type={"number"} ref={ addItemInfoHandle.price } min={"0"} step={"0.01"} maxWidth={"80%"}
-                                   pattern={"[0-9]*\.?[0-9]+"} onChange={() => setIsAddItemSaveDisabled(false)}/>
+                            <Input type={"number"} value={addItemPrice} min={"0"} step={"0.01"} maxWidth={"80%"}
+                                   pattern={"[0-9]*\.?[0-9]+"} onChange={
+                                (e) => {
+                                    setAddItemPrice(e.target.value);
+                                    setIsAddItemSaveDisabled(false);
+                                }}/>
                         </Stack>
 
                         { /* Item Stock */ }
                         <Stack {...inventoryFormItemStyle}>
                             <Text flexShrink={0}>Stock</Text>
-                            <Input type={"number"} ref={ addItemInfoHandle.stock } min={"0"} maxWidth={"80%"} onChange={() => setIsAddItemSaveDisabled(false)}/>
+                            <Input type={"number"} value={addItemStock} min={"0"} maxWidth={"80%"} onChange={
+                                (e) => {
+                                    setAddItemStock(e.target.value);
+                                    setIsAddItemSaveDisabled(false);
+                                }}/>
                         </Stack>
                     </Stack>
 
